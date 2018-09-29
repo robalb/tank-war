@@ -12,11 +12,35 @@ document.addEventListener('DOMContentLoaded',function(){
                                                     });
     });
 window.addEventListener('resize',resize);
+window.addEventListener('mousemove',function(pos){
+    if(mouseDown){
+        rotate(pos);
+    }
+});
+window.addEventListener('mousedown',
+function(pos){
+    mouseDown = true;                                                  
+    xMousePos = pos.clientX;
+    yMousePos = pos.clientY;
+});
+window.addEventListener('mouseup',function(){mouseDown = false;});
 //
 //
 //VARIABLES ALLOCATION
 //
 //
+
+//
+//mouse variables
+//
+var xMouseAngle = 1000;
+var yMouseAngle = 1000;
+var xMousePos = 0;
+var yMousePos = 0;
+//
+//rest of the variables
+//
+var mouseDown = false;
 var canvas = null;
 var glContext = null;
 var vertexShader = null;
@@ -34,6 +58,9 @@ var viewMat = new Float32Array(16);
 var viewMatLoc = null;
 var projectionMat = new Float32Array(16);
 var projectionMatLoc = null;
+var emptyMat = new Float32Array(16);
+var xRotationMat = new Float32Array(16);
+var yRotationMat = new Float32Array(16);
 var glProgram = null;
 //
 //
@@ -98,6 +125,19 @@ function resize(){
     glContext.viewport(0.0,0.0,glContext.drawingBufferWidth,glContext.drawingBufferHeight);
     console.log('resize ended without errors');
 }
+function rotate(pos){
+    //
+    //rotating the triangle when the mouse button is down
+    //
+    xMouseAngle += xMousePos - pos.clientX;
+    xMousePos = pos.clientX;
+    yMouseAngle += yMousePos - pos.clientY;
+    yMousePos = pos.clientY;
+    mat4.rotate(yRotationMat,emptyMat,xMouseAngle/100,[0,1,0]);
+    mat4.rotate(xRotationMat,emptyMat,-yMouseAngle/100,[1,0,0]);
+    mat4.mul(worldMat,xRotationMat,yRotationMat);
+    glContext.uniformMatrix4fv(worldMatLoc,glContext.FALSE,worldMat);
+}
 function setup(){
     resize();
     //
@@ -128,8 +168,9 @@ function setup(){
     //filling the matrixes
     //
     mat4.identity(worldMat);
-    mat4.lookAt(viewMat,[0.0,0.0,-10.0],[0.0,0.0,0.0],[0,1,0]);
+    mat4.lookAt(viewMat,[0.0,0.0,-5.0],[0.0,0.0,0.0],[0,1,0]);
     mat4.perspective(projectionMat, glMatrix.toRadian(45),canvas.width/canvas.height, 0.1,1000.0);
+    mat4.identity(emptyMat);
     //
     //binding the matrixes values to thems locations 
     //
@@ -191,7 +232,7 @@ function loadResource(url,callback){
 }
 function loop(){
     glContext.clear(glContext.DEPTH_BUFFER_BIT | glContext.COLOR_BUFFER_BIT);
-    glContext.drawElements(glContext.TRIANGLES,vertexesIndexes.legth,glContext.UNSIGNED_SHORT,0);
+    glContext.drawElements(glContext.TRIANGLES,vertexesIndexes.length,glContext.UNSIGNED_SHORT,0);
     console.log('girogiro');
     window.requestAnimationFrame(loop);
 }
