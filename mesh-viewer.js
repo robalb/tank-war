@@ -141,9 +141,11 @@ function resize(){
     //
     //setting the new widht/height of the canvas, and saying that the viewport of the glContext, must be equal to the drawing buffer 'capacity'(it means that you can have more accurate lines even if the window is very small[or at leas this is how i ve understood it])
     //
-    canvas.width = window.innerWidth-10;
-    canvas.height = window.innerHeight-10;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
     glContext.viewport(0.0,0.0,glContext.drawingBufferWidth,glContext.drawingBufferHeight);
+    mat4.perspective(projectionMat, glMatrix.toRadian(45),canvas.width/canvas.height, 0.1,1000.0);
+    glContext.uniformMatrix4fv(projectionMatLoc, glContext.FALSE,projectionMat);
     console.log('resize ended without errors');
 }
 function rotate(pos){
@@ -171,7 +173,6 @@ function scroll(direction){
     glContext.uniformMatrix4fv(viewMatLoc,glContext.FALSE,viewMat);    
 }
 function setup(){
-    resize();
     //
     //compiling and attaching the shaders to the program
     //
@@ -262,6 +263,7 @@ function setup(){
     
     glContext.clearColor(0.0,0.0,0.0,1.0);
     glContext.clear(glContext.DEPTH_BUFFER_BIT | glContext.COLOR_BUFFER_BIT);
+    resize();
     loop();
 }
 function loadResource(url,callback){
