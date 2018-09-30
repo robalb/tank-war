@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded',function(){
                                                     });
     });
 window.addEventListener('resize',resize);
+window.addEventListener('wheel',function(direction){scroll(direction)});
 window.addEventListener('mousemove',function(pos){
     if(mouseDown){
         rotate(pos);
@@ -37,6 +38,7 @@ var xMouseAngle = 1000;
 var yMouseAngle = 1000;
 var xMousePos = 0;
 var yMousePos = 0;
+var lookingDistance = -10;
 //
 //rest of the variables
 //
@@ -46,8 +48,10 @@ var glContext = null;
 var vertexShader = null;
 var fragmentShader = null;
 var vertexPositionAttribLoc = null;
+var normalVertexPositionAttribLoc = null;
 var vertexColorAttribLoc = null;
 var positionBuffer = null;
+var normalPositionBuffer = null;
 var indexBuffer = null;
 //
 //allocating the float32 format arrays for the matrixes
@@ -80,7 +84,7 @@ var vertexesPositions =
 ];
 var vertexesIndexes = 
 [
-    //triangle
+    //cube
     0,3,1,
     0,3,2,
     0,5,1,
@@ -116,6 +120,7 @@ function glCheck(vertShader,fragShader){
         vertexShader = glContext.createShader(glContext.VERTEX_SHADER);
         fragmentShader = glContext.createShader(glContext.FRAGMENT_SHADER);
         positionBuffer = glContext.createBuffer();
+        normalPositionBuffer = glContext.createBuffer();
         indexBuffer = glContext.createBuffer();
         glProgram = glContext.createProgram();
         //
@@ -154,6 +159,17 @@ function rotate(pos){
     mat4.mul(worldMat,xRotationMat,yRotationMat);
     glContext.uniformMatrix4fv(worldMatLoc,glContext.FALSE,worldMat);
 }
+function scroll(direction){
+    if(direction.deltaY < 0){
+        lookingDistance += lookingDistance/-10;
+        mat4.lookAt(viewMat,[0.0,0.0,lookingDistance],[0.0,0.0,0.0],[0.0,1.0,0.0]);
+    }
+    else{
+        lookingDistance -= lookingDistance/-10;
+        mat4.lookAt(viewMat,[0.0,0.0,lookingDistance],[0.0,0.0,0.0],[0.0,1.0,0.0]);
+    }
+    glContext.uniformMatrix4fv(viewMatLoc,glContext.FALSE,viewMat);    
+}
 function setup(){
     resize();
     //
@@ -161,6 +177,7 @@ function setup(){
     //
     glContext.compileShader(vertexShader);
     glContext.compileShader(fragmentShader);
+    console.log(glContext.getShaderInfoLog(fragmentShader));
     glContext.attachShader(glProgram, vertexShader);
     glContext.attachShader(glProgram, fragmentShader);
     //
@@ -177,6 +194,7 @@ function setup(){
     //
     vertexColorAttribLoc = glContext.getAttribLocation(glProgram,'vertColor');
     vertexPositionAttribLoc = glContext.getAttribLocation(glProgram,'vertPosition');
+    normalVertexPositionAttribLoc = glContext.getAttribLocation(glProgram,'normalVertPosition');
     worldMatLoc = glContext.getUniformLocation(glProgram,'worldMat');
     viewMatLoc = glContext.getUniformLocation(glProgram,'viewMat');
     projectionMatLoc = glContext.getUniformLocation(glProgram,'projectionMat');
@@ -184,7 +202,7 @@ function setup(){
     //filling the matrixes
     //
     mat4.identity(worldMat);
-    mat4.lookAt(viewMat,[0.0,0.0,-5.0],[0.0,0.0,0.0],[0,1,0]);
+    mat4.lookAt(viewMat,[0.0,0.0,lookingDistance],[0.0,0.0,0.0],[0,1,0]);
     mat4.perspective(projectionMat, glMatrix.toRadian(45),canvas.width/canvas.height, 0.1,1000.0);
     mat4.identity(emptyMat);
     //
@@ -198,11 +216,14 @@ function setup(){
     //
     glContext.bindBuffer(glContext.ARRAY_BUFFER,positionBuffer);
     glContext.bufferData(glContext.ARRAY_BUFFER,new Float32Array(vertexesPositions),glContext.STATIC_DRAW);
+    glContext.bindBuffer(glContext.ARRAY_BUFFER,normalPositionBuffer);
+    glContext.bufferData(glContext.ARRAY_BUFFER,new Float32Array(vertexesPositions),glContext.STATIC_DRAW);
     glContext.bindBuffer(glContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
     glContext.bufferData(glContext.ELEMENT_ARRAY_BUFFER, new Uint16Array(vertexesIndexes),glContext.STATIC_DRAW);
     //
     //now estabilishing the pattern to use to get the data from the buffers...
     //
+    glContext.bindBuffer(glContext.ARRAY_BUFFER,positionBuffer);
     glContext.vertexAttribPointer(
         vertexPositionAttribLoc,            //the attrib location inside the fragment
         3,                                  //amount of elements to take from the array
@@ -219,11 +240,21 @@ function setup(){
         7*Float32Array.BYTES_PER_ELEMENT,
         3*Float32Array.BYTES_PER_ELEMENT    //this time i have an offset of 3 elements because i want to take only the color data and the size of the offset must be in bytes too (check the architecture of the array above in the INDEXES AND POSITIONS section)
     );
+    glContext.bindBuffer(glContext.ARRAY_BUFFER,normalPositionBuffer);
+    glContext.vertexAttribPointer(
+        normalVertexPositionAttribLoc,
+        3,
+        glContext.FLOAT,
+        glContext.TRUE,
+        7*Float32Array.BYTES_PER_ELEMENT,
+        0
+    );
     //
     //now its the moment to enable our vertAttribPointers:          (PA: you must always give to the gpu a program before enabling the pointers )
     //
     glContext.enableVertexAttribArray(vertexPositionAttribLoc);
     glContext.enableVertexAttribArray(vertexColorAttribLoc);
+    glContext.enableVertexAttribArray(normalVertexPositionAttribLoc);
     //
     //if we re already here i think i should put this too
     //
