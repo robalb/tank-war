@@ -69,14 +69,30 @@ var glProgram = null;
 //
 var vertexesPositions = 
 [//   X ,  Y ,  Z ,     R ,  G ,  B ,  A
-    -0.5,-0.5, 0.0,    1.0, 0.0, 0.0, 1.0,
-     0.5,-0.5, 0.0,    1.0, 0.0, 0.0, 1.0,
-     0.0, 0.5, 0.0,    1.0, 0.0, 0.0, 1.0
+      -0.5 ,  0.5 ,  0.5 ,    1.0, 1.0, 0.0, 1.0, //0
+      -0.5 ,  0.5 ,  -0.5 ,    1.0, 0.0, 1.0, 1.0, //1
+      0.5 ,  0.5 ,  0.5 ,    1.0, 1.0, 1.0, 1.0, //2
+      0.5 ,  0.5 ,  -0.5 ,    0.0, 1.0, 0.0, 1.0, //3
+      -0.5 ,  -0.5 ,  0.5 ,    0.0, 1.0, 1.0, 1.0, //4
+      -0.5 ,  -0.5 ,  -0.5 ,    0.5, 0.5, 0.0, 1.0, //5
+      0.5 ,  -0.5 ,  0.5 ,    1.0, 0.5, 0.5, 1.0, //6
+      0.5 ,  -0.5 ,  -0.5 ,    1.0, 0.0, 0.5, 1.0, //7
 ];
 var vertexesIndexes = 
 [
     //triangle
-    0,1,2
+    0,3,1,
+    0,3,2,
+    0,5,1,
+    0,5,4,
+    0,6,4,
+    0,6,2,
+    7,4,5,
+    7,4,6,
+    7,2,6,
+    7,2,3,
+    7,1,3,
+    7,1,5
 ];
 //
 //
@@ -131,7 +147,7 @@ function rotate(pos){
     //
     xMouseAngle += xMousePos - pos.clientX;
     xMousePos = pos.clientX;
-    yMouseAngle += yMousePos - pos.clientY;
+    yMouseAngle -= yMousePos - pos.clientY;
     yMousePos = pos.clientY;
     mat4.rotate(yRotationMat,emptyMat,xMouseAngle/100,[0,1,0]);
     mat4.rotate(xRotationMat,emptyMat,-yMouseAngle/100,[1,0,0]);
