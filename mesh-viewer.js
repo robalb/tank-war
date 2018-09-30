@@ -1,18 +1,19 @@
 'use strict';
 document.addEventListener('DOMContentLoaded',function(){
-        loadResource('./shaders/vertshader.glsl',function(VS_Err,VS_text){if(VS_Err != null){console.log(VS_Err);}
-                                                     else{
-                                                         loadResource('./shaders/fragshader.glsl',function(FS_Err,FS_text){
-                                                             if(FS_Err != null){conosle.log(FS_Err);}
-                                                             else{
-                                                                glCheck(VS_text,FS_text);
-                                                             }
-                                                         });
-                                                     }
-                                                    });
+  loadResource('./shaders/vertshader.glsl',
+    function (VS_Err,VS_text){
+      if (VS_Err != null) console.log(VS_Err)
+      else{
+        loadResource('./shaders/fragshader.glsl',
+          function(FS_Err,FS_text){
+            if (FS_Err != null) conosle.log(FS_Err)
+            else glCheck(VS_text,FS_text)
+          });
+      }
     });
+});
 window.addEventListener('resize',resize);
-window.addEventListener('wheel',function(direction){scroll(direction)});
+window.addEventListener('wheel', scroll);
 window.addEventListener('mousemove',function(pos){
     if(mouseDown){
         rotate(pos);
